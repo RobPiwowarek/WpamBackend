@@ -22,7 +22,7 @@ public class UserController {
     }
 
     @CrossOrigin
-    @PostMapping("/login")
+    @PutMapping("/login")
     public boolean login(@RequestBody User user) {
         List<User> fetched = jdbcTemplate.query(
                 "SELECT * FROM USERS WHERE EMAIL = ?", new Object[]{user.getEmail()}, new UserRowMapper()
@@ -45,10 +45,74 @@ public class UserController {
                 "SELECT * FROM USERS WHERE EMAIL = ?", new Object[]{user.getEmail()}, new UserRowMapper()
         );
 
+        System.out.println("fetched size " + fetched.size());
+
+        for (User a: fetched) {
+            System.out.println(a.getEmail());
+            System.out.println(a.getPassword());
+        }
+
         if (fetched.size() != 0)
             return false;
 
         jdbcTemplate.update("INSERT INTO USERS VALUES (?, ?)", user.getEmail(), user.getPassword());
         return true;
+    }
+
+    @CrossOrigin
+    @PutMapping("/save")
+    public boolean save(@RequestBody SaveRequest request) {
+        List<User> fetchedUsers = jdbcTemplate.query(
+                "SELECT * FROM USERS WHERE EMAIL = ?", new Object[]{request.getEmail()}, new UserRowMapper()
+        );
+
+        if (fetchedUsers.size() != 1)
+            return false;
+
+        if (fetchedUsers.get(0).getEmail().equals(request.getEmail()) && fetchedUsers.get(0).getPassword().equals(request.getPassword())) {
+            List<Texture> fetched = jdbcTemplate.query(
+                    "SELECT * FROM TEXTURES WHERE EMAIL = ?", new Object[]{request.getEmail()}, new TextureRowMapper()
+            );
+
+            System.out.println("fetched size " + fetched.size());
+
+            for (Texture a: fetched) {
+                System.out.println(a.getEmail());
+                System.out.println(a.getTexture());
+            }
+
+            jdbcTemplate.update("INSERT INTO TEXTURES VALUES (?, ?)", request.getEmail(), request.getTexture());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @CrossOrigin
+    @PutMapping("/load")
+    public String load(@RequestBody User request) {
+        List<User> fetchedUsers = jdbcTemplate.query(
+                "SELECT * FROM USERS WHERE EMAIL = ?", new Object[]{request.getEmail()}, new UserRowMapper()
+        );
+
+        if (fetchedUsers.size() != 1)
+            return "FAILURE";
+
+        if (fetchedUsers.get(0).getEmail().equals(request.getEmail()) && fetchedUsers.get(0).getPassword().equals(request.getPassword())) {
+            List<Texture> fetched = jdbcTemplate.query(
+                    "SELECT * FROM TEXTURES WHERE EMAIL = ?", new Object[]{request.getEmail()}, new TextureRowMapper()
+            );
+
+            System.out.println("fetched size " + fetched.size());
+
+            for (Texture a: fetched) {
+                System.out.println(a.getEmail());
+                System.out.println(a.getTexture());
+            }
+
+            return fetched.get(0).getTexture();
+        } else {
+            return "UNAUTHORISED";
+        }
     }
 }
