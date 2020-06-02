@@ -42,13 +42,17 @@ public class UserController {
                     "SELECT * FROM TEXTURES WHERE EMAIL = ?", new Object[]{request.getEmail()}, new TextureRowMapper()
             );
 
-            jdbcTemplate.update("INSERT INTO TEXTURES VALUES (?, ?)", request.getEmail(), request.getTexture());
+            if (fetched.size() == 0) {
+                jdbcTemplate.update("INSERT INTO TEXTURES VALUES (?, ?)", request.getEmail(), request.getTexture());
+            } else {
+                jdbcTemplate.update("UPDATE TEXTURES SET email=?, texture=?", request.getEmail(), request.getTexture());
+            }
 
             List<Stats> fetchedStats = jdbcTemplate.query(
                     "SELECT * FROM STATS WHERE EMAIL = ?", new Object[]{request.getEmail()}, new StatsRowMapper()
             );
 
-            if (fetched.size() == 0) {
+            if (fetchedStats.size() == 0) {
                 jdbcTemplate.update("INSERT INTO STATS VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", request.getEmail(), "Name...", 1, 1, 1, 1, 1, 0, 0, 0, 0, 10);
             }
 
@@ -90,7 +94,20 @@ public class UserController {
     @PutMapping("/saveStats")
     public boolean saveStats(@RequestBody StatsSaveRequest request) {
         if (authorize(request.getEmail(), request.getPassword())) {
-            jdbcTemplate.update("INSERT INTO STATS VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", request.getEmail(), request.getName(), request.getLevel(), request.getDamage(), request.getHealth(), request.getEnergy(), request.getHealing(), request.getArmor(), request.getCrit(), request.getStun(), request.getEvade(), request.getPoints());
+            jdbcTemplate.update("UPDATE STATS SET name=?, level=?, damage=?, health=?, energy=?, healing=?, armor=?, crit=?, stun=?, evade=?, points=? where email=?",
+                    request.getName(),
+                    request.getLevel(),
+                    request.getDamage(),
+                    request.getHealth(),
+                    request.getEnergy(),
+                    request.getHealing(),
+                    request.getArmor(),
+                    request.getCrit(),
+                    request.getStun(),
+                    request.getEvade(),
+                    request.getPoints(),
+                    request.getEmail()
+                    );
             return true;
         } else {
             return false;
